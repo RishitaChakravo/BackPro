@@ -15,10 +15,12 @@ app.use(express.urlencoded({extended: true, limit :
 app.use(express.static("public"))
 app.use(cookieParser())
 
+//routes import 
+import userRouter from './routes/user.routes.js'
 
+//routes declaration
+app.use("/api/v1/users", userRouter)
 
-app.get('/', (req, res) => {
-    res.send(`Server is running at port: ${process.env.PORT}`)
-})
-
+//url http://localhost:8000/api/v1/users/register
+ 
 export { app }
