@@ -8,8 +8,8 @@ const registerUser = asyncHandler( async (req, res) => {
     const {fullname, username, email, password} = req.body
     
     if(
-        [fullname, email, password, username].some(() => 
-            info?.trim() === "")
+        [fullname, email, password, username].some((field) => 
+            field?.trim() === "")
     ){
         throw new ApiError(400, "All fields are required")
     }
@@ -18,7 +18,7 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(400, "Email invalid")
     }
 
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{username}, {email}]
     })
 
@@ -26,15 +26,28 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(409, "User with email or username already existed")
     }
 
+    if (!req.files || !req.files["avatar"]) {
+        throw new ApiError(400, "Avatar file is required");
+    }
+
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    //const coverimageLocalPath = req.files?.coverimage[0]?.path;
+
+    let coverimageLocalPath;
+    if(req.files && Array.isArray(req.files.coverimage) && req.files.coverimage.length > 0){
+        coverimageLocalPath = req.files.coverimage[0].path;
+    }
+
 
     if(!avatarLocalPath){
         throw new ApiError(400, "Avatar file is required")
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+    if (!avatar || !avatar.url) {
+        throw new ApiError(500, "Failed to upload avatar");
+    }
+    const coverimage = await uploadOnCloudinary(coverimageLocalPath)
     
     if(!avatar){
         throw new ApiError(400, "Avatar file is required")
@@ -43,7 +56,7 @@ const registerUser = asyncHandler( async (req, res) => {
     const user = await User.create({
         fullname, 
         avatar : avatar.url,
-        coverImage : coverImage.url || "",
+        coverimage : coverimage.url || "",
         email,
         password,
         username: username.toLowerCase()
