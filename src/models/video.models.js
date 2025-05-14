@@ -36,6 +36,9 @@ const videoSchema = new Schema({
     updatedAt : {}
 }, {timestamps : true})
 
-videoSchema.plugin(mongooseAggregatePaginate)
+videoSchema.plugin(mongooseAggregatePaginate)//divides the number of videos to be shown 
+//eg. if there are 1000 videos it will show 10 videos a time
+
+// .plugin() -> used to extend schemas functionality or add reuseable code to the Schema
 
 export const Video = mongoose.model("Video", videoSchema)

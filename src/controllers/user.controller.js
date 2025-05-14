@@ -22,6 +22,15 @@ const generateAccessAndRefreshTokens = async (userId) => {
 }
 
 const registerUser = asyncHandler( async (req, res) => {
+    // get user details from frontend
+    // validation - not empty
+    // check if user already exists: username, email
+    // check for images, check for avatar
+    // upload them to cloudinary, avatar
+    // create user object - create entry in db
+    // remove password and refresh token field from response
+    // check for user creation
+    // return res
     const {fullname, username, email, password} = req.body
     
     if(
@@ -114,7 +123,7 @@ const loginUser = asyncHandler( async (req, res) => {
     })
 
     if(!user){
-        throw new ApiError(404, "User doesn't exist, Rgeister User first")
+        throw new ApiError(404, "User doesn't exist, Register User first")
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password)
@@ -123,7 +132,7 @@ const loginUser = asyncHandler( async (req, res) => {
         throw new ApiError(401, "Invalid User Credentials")
     }
 
-    const {accessToken, refreshToken} = await generateRefreshToken(user._id);
+    const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id);
 
     const loggedInUser = await user.findById(user._id).
     select("-password -refreshToken")
@@ -152,7 +161,7 @@ const logoutUser = asyncHandler( async function(req, res){
     await User.findByIdAndUpdate(
         req.user._id, 
         {
-            $set : { refreshToken: undefined}
+            $unset : { refreshToken: 1}
         },
         {
             new : true
@@ -224,7 +233,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     if (!(newPassword === confPassword)) {
         throw new ApiError(400, "Confirm password again");
     }
-    const user = await User.findById(req.user?._0id);
+    const user = await User.findById(req.user?._id);
 
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassWord)
 
@@ -249,7 +258,11 @@ const getCurrentUser = asyncHandler( async (req, res) => {
 const updateAccountDetails = asyncHandler(async(req, res) => {
     const {fullname, email} = req.body
 
-    if(!fullname || !email) {
+    if(
+        [fullname, email].some((field) => 
+            field?.trim() === ""
+        )
+    ) {
         throw new ApiError(400, "All fields are required")
     }
 
@@ -332,7 +345,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, user, "Cover iamge updated successfully")
+        new ApiResponse(200, user, "Cover image updated successfully")
     )
 })
 
@@ -454,12 +467,3 @@ export {registerUser,
         getWatchHistory
     }
 
-// get user details from frontend
-// validation - not empty
-// check if user already exists: username, email
-// check for images, check for avatar
-// upload them to cloudinary, avatar
-// create user object - create entry in db
-// remove password and refresh token field from response
-// check for user creation
-// return res

@@ -57,24 +57,24 @@ const userSchema = new Schema({
 userSchema.pre("save", async function (next) {
     if(!this.isModified("password")) return next();
 
-    this.password = await bcrypt.hash(this.password, 10)
+    this.password = await bcrypt.hash(this.password, 10) //hashing of password
     next()
-})
+}) //pre middleware before saving the userdata we do a functionality
 
 userSchema.methods.isPasswordCorrect = async function 
 (password){
-    return await bcrypt.compare(password, this.password)
+    return await bcrypt.compare(password, this.password) //compare password withh the entered password
 }
 
 userSchema.methods.generateAccessToken = function () {
    return jwt.sign(
-        {
+        { //payload
             _id : this.id,
             email : this.email,
             username : this.username,
             fullname : this.fullname
         },
-        process.env.ACCESS_TOKEN_SECRET,
+        process.env.ACCESS_TOKEN_SECRET, 
         {
             expiresIn : process.env.ACCESS_TOKEN_EXPIRY
         }
